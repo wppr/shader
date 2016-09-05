@@ -1,18 +1,20 @@
 {
-    "name": "gbuffer pass",
-    "GLShader": {
-        "vertex shader": {
-            "name": "gbuffervs",
-            "path": "geometrypass.vs"
+    "name":"BasicShading pass",
+    "GLShader":{
+        "vertex shader":{
+            "name":"BasicShadingvs",
+            "path":"BasicShading.vs"
         },
-        "fragment shader": {
-            "name": "gbufferfs",
-            "path": "geometrypass.fs"
+        "fragment shader":{
+            "name":"BasicShadingfs",
+            "path":"BasicShading.fs"
         }
     },
-    "DXShader": {},
-    "input": {
-        "uniform": {
+    "DXShader":{
+
+    },
+    "input":{
+        "uniform":{
             "WorldMatrix": "GVS_WORLD_MATRIX",
             "eyepos": "GVS_CAMERA_POSITION",
             "Projection": "GVS_PROJECTION_MATRIX",
@@ -24,8 +26,9 @@
             "ambient_color": "GVS_MATERIAL_AMBIENT",
             "specular_texture": "GVS_TEXTURE_SPECULAR",
             "specular_color": "GVS_MATERIAL_SPECULAR"
+
         },
-        "attribute": {
+        "attribute":{
             "vPositon": {
                 "type": "vec3",
                 "semantic": "POSITION",
@@ -40,20 +43,8 @@
                 "type": "vec2",
                 "semantic": "TEXCOORD",
                 "index": 2
-            },
-            "vertex_bone_weight": {
-                "type": "vec4",
-                "semantic": "BONEWEIGHT",
-                "index": 3
-            },
-            "vertex_bone_id": {
-                "type": "ivec4",
-                "semantic": "BONEID",
-                "index": 4
             }
         }
-    },
-    "output": {
-        "rendertarget": "目前还没使用"
     }
+
 }

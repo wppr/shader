@@ -12,10 +12,12 @@ uniform mat4 WorldMatrix;
 uniform float Far;
 uniform float Near;
 uniform int  LinearDepth;
-out vec4 LightPos;
+
 void main() {
+	
+	
 	vec4 pos=proj_light*view_light *WorldMatrix*vec4(vPosition, 1.0);
-	LightPos=WorldMatrix*vec4(vPosition, 1.0);
+
 	if(LinearDepth==1){
 		vec4 view_pos=view_light *WorldMatrix*vec4(vPosition, 1.0);
 		float z=view_pos.z/view_pos.w;

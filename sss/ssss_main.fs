@@ -73,8 +73,10 @@ uniform int sssEnabled;
 uniform int NormalMapEnabled;
 uniform float sssWidth;
 uniform float ambient;
-float n=0.1;
-float f=10;
+uniform float n;
+uniform float f;
+uniform int mode;
+#include "shadowMapUse.h"
 float3 BumpMap( sampler2D normalTex, float2 texcoord) {
 	float3 bump;
 	bump.xy = -1.0 + 2.0 * textureLod(normalTex,texcoord,0).gr;
@@ -106,21 +108,10 @@ float SpecularKSK(sampler2D beckmannTex, vec3 normal, vec3 light, vec3 view, flo
 	return ndotl * ksk;
 }
 
-// float simpleShadow(vec3 worldPosition, int i){
-// 	float shadow_term=1.0;
-// 	vec4 shadowcoord = shadowMat[i] * vec4(worldPosition,1.0);
-// 	float depthmap=texture(shadowMaps[i],shadowcoord.xy/shadowcoord.w).x;
-// 	if(0.001+depthmap<shadowcoord.z/shadowcoord.w)
-// 		shadow_term=0.0;
-// 	return shadow_term;
-// }
-
 float Shadow(vec3 worldPosition, int i) {
 	vec4 shadowPosition = shadowMat[i]* vec4(worldPosition, 1.0);
 	shadowPosition.xy /= shadowPosition.w;
 	shadowPosition.z += lights[i].bias;
-	float n=0.1;
-	float f=10;
 	float z=shadowPosition.z*2-shadowPosition.w;//range -near ..far
 	float z2=(z+n)/(f+n);//range 0..1
 	float z1=texture(shadowMaps[i], shadowPosition.xy).r;
@@ -129,31 +120,6 @@ float Shadow(vec3 worldPosition, int i) {
 	else 
 		return 1.0;
 }
-
-// float ShadowPCF(float3 worldPosition, int i, int samples, float width) {
-// 	vec4 shadowPosition = shadowMat[i] * vec4(worldPosition, 1.0);
-// 	shadowPosition.xy /= shadowPosition.w;
-// 	shadowPosition.z += lights[i].bias;
-
-// 	vec2  texturesize= textureSize(shadowMaps[i], 0);
-// 	float w = texturesize.x;
-// 	float h = texturesize.y;
-	
-
-// 	float shadow = 0.0;
-// 	float offset = (samples - 1.0) / 2.0;
-
-// 	for (float x = -offset; x <= offset; x += 1.0) {
-// 		for (float y = -offset; y <= offset; y += 1.0) {
-// 			vec2 pos = shadowPosition.xy + width * vec2(x, y) / w;
-// 			//shadow +textureGather(shadowMaps[i],pos,shadowPosition.z / lights[i].farPlane).r;
-// 			//shadow += CompareShadow(shadowMaps[i], pos, shadowPosition.z / lights[i].farPlane, 0.0f);//textureLod(shadowMaps[i], shadowPosition.xy, shadowPosition.z / lights[i].farPlane).r;
-// 		}
-// 	}
-// 	shadow /= samples * samples;
-// 	return shadow;
-// }
-
 
 
 float3 SSSSTransmittance(
@@ -275,13 +241,13 @@ void main()
 
 
 	//for (int i = 0; i < LightNum; i++) {
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 3; i++) {
 		float3 light = lights[i].position - worldPosition.xyz;
 		float dist = length(light);
 		light /= dist;
 
 		float spot = dot(lights[i].direction, -light);
-		if (spot > lights[i].falloffStart) {
+		//if (spot > lights[i].falloffStart) {
 			// Calculate attenuation:
 			float curve = min(pow(dist / lights[i].farPlane, 6.0), 1.0);
 			float attenuation = mix(1.0 / (1.0 + lights[i].attenuation * dist * dist), 0.0, curve);
@@ -290,7 +256,7 @@ void main()
 			spot = SSSSSaturate((spot - lights[i].falloffStart) / lights[i].falloffWidth);
 
 			// Calculate some terms we will use later on:
-			vec3 f1 = lights[i].color * attenuation * spot;
+			vec3 f1 = lights[i].color * attenuation ;//* spot;
 			vec3 f2 = albedo.rgb * f1;
 			
 			// Calculate the diffuse and specular lighting:
@@ -299,26 +265,61 @@ void main()
 
 			// And also the shadowing:
 			//float shadow = Shadow(worldPosition.xyz, i, 3, 1.0);
-			float shadow = Shadow(worldPosition.xyz, i);
+
+			float shadow=0;
+			if(i<2) 
+				shadow= Shadow(worldPosition.xyz, i);
+			else
+			 	shadow=ShadowVSM(shadowMaps[i],shadowMat[i],worldPosition.xyz,lights[i].position);
+			// shadow=1.0;
 			// Add the diffuse and specular components:
-			//shadow=1.0;
 			color.rgb += shadow*(f2 * diffuse + f1 * specular);
-			//color.rgb=normal;
 			// Add the transmittance component:
 			if (sssEnabled==1)
 				color.rgb +=  SSSSTransmittance(translucency, sssWidth, worldPosition.xyz, normalize(o_normal), light, shadowMaps[i], shadowMat[i], lights[i].farPlane);
-		}
+		//}
 	}
 
 	// Add the ambient component:
 	color.rgb += occlusion * ambient * albedo.rgb * texture(irradianceTex,normal).rgb;
-	//color.rgb=albedo.rgb;
+	//color.rgb=vec3(occlusion);
 	// Store the SSS strength:
 	color.a = 1.0;
-	//color=worldPosition;
-	// //color=vec4(0.8,0.2,0.009,1.0);
-	// color=vec4(normal,1.0);
+
 	color=pow(color,1/gamma);
+
+
+	float w=1280;
+	float h=720;
+	vec2 fragCoord=gl_FragCoord.xy/vec2(w,h);
+	
+	int i=0;
+	if(mode==1)
+		i=0;
+	if(mode==2)
+		i=1;
+	if(mode==3)
+		i=2;
+
+	if(mode>0&&mode<=3){
+		vec2 z=texture(shadowMaps[i],fragCoord).xy;
+		color=vec4(z.x);
+	}
+	if(mode==4)
+	{
+		float shadow= Shadow(worldPosition.xyz, 0);
+		color=vec4(shadow);
+	}
+	if(mode==5)
+	{
+		float shadow= Shadow(worldPosition.xyz, 1);
+		color=vec4(shadow);
+	}
+	if(mode==6)
+	{
+		float shadow=ShadowVSM(shadowMaps[2],shadowMat[2],worldPosition.xyz,lights[2].position);
+		color=vec4(shadow);
+	}
 	//color*=0.8;
 	// float3 light = lights[0].position - worldPosition.xyz;
 	// float dist = length(light);

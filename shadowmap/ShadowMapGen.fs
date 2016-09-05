@@ -1,9 +1,9 @@
 
 
-in vec4 LightPos;
+// in vec4 LightPos;
 
-out vec4 pos;
+// out vec4 pos;
 void main() {
-	pos=LightPos;
+	//pos=LightPos;
 
 }

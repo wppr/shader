@@ -46,14 +46,7 @@ vec3 ApproximateSpecularIBL( vec3 SpecularColor, float Roughness, vec3 N, vec3 V
 	vec2 EnvBRDF = IntegrateBRDF( Roughness, NoV );
 	return PrefilteredColor*( SpecularColor * EnvBRDF.x + EnvBRDF.y );
 }
-// vec3 fix_cube_lookup(vec3 v) { 
-// 	float scale = 1 - pow(2,lod) / cube_size;
-// 	float M = max(max(abs(v.x), abs(v.y)), abs(v.z)); 
-// 	if (abs(v.x) != M) v.x *= scale; 
-// 	if (abs(v.y) != M) v.y *= scale; 
-// 	if (abs(v.z) != M) v.z *= scale; 
-// 	return v; 
-// }
+
 void main(){
 
 	vec3 N=normalize(Normal);
@@ -62,9 +55,16 @@ void main(){
 	float metalness=ambient_color.x;
 	float roughness=ambient_color.y;
 
-
 	vec3 base_color=diffuse_color.xyz;
-	base_color=BaseColor;
+//test
+	// metalness=0.3;
+	// roughness=0.4;	
+
+	// vec3 texcolor=texture(diffuse_texture,Texcoord).rgb;
+	// if(length(texcolor)>0)
+	// 	base_color=texcolor;
+//
+	//base_color=BaseColor;
 	vec3 color=mix(base_color,vec3(0),metalness);
 	vec3 f0=mix(vec3(0.04),base_color,metalness);
 
@@ -74,7 +74,8 @@ void main(){
 
 
 	image_out=specular+diffuse;
-	//image_out=base_color;
+	// image_out=base_color;
+	// image_out=texture(diffuse_texture,Texcoord).rgb;
 	//image_out=pow(image_out,vec3(1/2.2));
 	//image_out=vec3(roughness);
 	//image_out=Normal;

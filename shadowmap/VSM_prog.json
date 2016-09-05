@@ -1,13 +1,13 @@
 {
-    "name": "shadowmap pass",
+    "name": "VSM pass",
     "GLShader": {
         "vertex shader": {
             "name": "shadowmapvs",
-            "path": "ShadowMapGen.vs"
+            "path": "VSM.vs"
         },
         "fragment shader": {
             "name": "shadowmapfs",
-            "path": "ShadowMapGen.fs"
+            "path": "VSM.fs"
         }
     },
     "input": {

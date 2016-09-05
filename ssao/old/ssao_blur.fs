@@ -1,5 +1,3 @@
-#version 300 es
-precision highp float;
 
 in vec2 texcoord;
 out vec4 image_acc_blur;
