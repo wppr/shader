@@ -43,7 +43,7 @@ uniform float bias;
 vec3 GetBaseColor(vec4 color,sampler2D tex){
 	vec3 base_color=color.xyz*0.5;
 	vec3 tex_color=texture(tex,Texcoord).rgb;
-	tex_color=pow(tex_color,vec3(2.2));
+	//tex_color=pow(tex_color,vec3(2.2));
 	if(color.w==1.0)	
 		base_color=tex_color;
 	//base_color=pow(base_color,vec3(2.2));
